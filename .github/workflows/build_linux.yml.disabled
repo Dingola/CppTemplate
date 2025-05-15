@@ -12,7 +12,6 @@ env:
   BUILD_TARGET_TYPE: static_library
   BUILD_TEST_PROJECT: true
   THIRD_PARTY_INCLUDE_DIR: ${{ github.workspace }}/ThirdPartyDir
-  QT_VERSION: "6.8.0"
 
 jobs:
   build-linux:
@@ -36,23 +35,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-3rdparty-
 
-      - name: Install Qt if not cached
-        uses: jurplel/install-qt-action@v4
-        with:
-          aqtversion: '==3.1.*'
-          version: ${{ env.QT_VERSION }}
-          host: 'linux'
-          target: 'desktop'
-          arch: 'linux_gcc_64'
-
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libpthread-stubs0-dev libgl1-mesa-dev \
-            libxcb-cursor0 libxcb-cursor-dev libx11-xcb-dev xvfb
-
-      - name: Set QT6_DIR
-        run: echo "QT6_DIR=${{ github.workspace }}/../Qt/${{ env.QT_VERSION }}/gcc_64" >> $GITHUB_ENV
+          sudo apt-get install -y build-essential
 
       - name: Configure CMake
         run: |
