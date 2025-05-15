@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.19.0 FATAL_ERROR)
 ### Setup project                        ###
 ############################################
 
-project(QML_Project_Tests LANGUAGES CXX VERSION "0.0.0")
+project(CPP_Project_Tests LANGUAGES CXX VERSION "0.0.0")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Include CMake helper scripts
@@ -37,40 +37,12 @@ file(GLOB_RECURSE Headers
      "Headers/*.h"
 )
 
-file(GLOB_RECURSE CPP_Sources
+file(GLOB_RECURSE Sources
      "main.cpp"
      "Sources/*.cpp"
 )
 
-file(GLOB_RECURSE QML_Sources
-     "Sources/QML/*.qml"
-)
-
-# Combine C++ and QML sources
-set(Sources ${CPP_Sources} ${QML_Sources})
-
 include_directories(Headers Sources)
-
-############################################
-### Qt6 Configuration                    ###
-############################################
-
-if ("$ENV{QT6_DIR}" STREQUAL "")
-	set(QT6_DIR "E:\\Qt\\6.8.0\\msvc2022_64\\")
-else()
-	set(QT6_DIR "$ENV{QT6_DIR}")
-endif()
-
-if (EXISTS ${QT6_DIR})
-	set(CMAKE_PREFIX_PATH ${QT6_DIR})
-else()
-	message(WARNING "The specified qt6 path '${QT6_DIR}' does not exist")
-endif()
-
-find_package(Qt6 REQUIRED COMPONENTS Widgets Qml Quick QuickControls2 Gui LinguistTools)
-qt_standard_project_setup()
-#qt6_add_resources(RSCS resources.qrc)
-#add_custom_target(gen_qrc DEPENDS ${RSCS})
 
 ############################################
 ### Clang-Format Configuration           ###
@@ -85,7 +57,7 @@ if(USE_CLANG_FORMAT)
             -style=file:${CMAKE_SOURCE_DIR}/Configs/.clang-format
             -i
             ${Headers}
-            ${CPP_Sources}
+            ${Sources}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Formatting code with clang-format"
         )
@@ -107,7 +79,7 @@ if(USE_CLANG_TIDY)
 			--config-file=${CMAKE_SOURCE_DIR}/Configs/.clang-tidy
             -p=${CMAKE_BINARY_DIR}
             ${Headers}
-            ${CPP_Sources}
+            ${Sources}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Running clang-tidy for static analysis"
         )
@@ -147,7 +119,6 @@ message(STATUS "-----------------------------------------------")
 message(STATUS "")
 message(STATUS "  Third Party Include Directory:            ${THIRD_PARTY_INCLUDE_DIR}")
 message(STATUS "  ${doc_sub_target_name}_BUILD_DOC:          ${${doc_sub_target_name}_BUILD_DOC}")
-message(STATUS "  Qt6 Directory (QT6_DIR env):              ${QT6_DIR}")
 message(STATUS "")
 message(STATUS "-----------------------------------------------")
 message(STATUS "")
@@ -159,7 +130,6 @@ message(STATUS "###############################################################"
 
 add_executable(${PROJECT_NAME})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/GoogleTest.cmake)
 
@@ -182,19 +152,6 @@ target_sources(${PROJECT_NAME}
 		${Sources}
 )
 
-if (WIN32)
-	# Retrieve the absolute path to qmake and then use that path to find
-	# the windeployqt executable
-	find_program(WINDEPLOYQT_ENV_SETUP qtenv2.bat HINTS "${QT6_DIR}/bin")
-	find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT6_DIR}/bin")
-
-	# Run windeployqt immediately after build
-	add_custom_command(TARGET ${PROJECT_NAME}
-		POST_BUILD
-		COMMAND "${WINDEPLOYQT_ENV_SETUP}" && "${WINDEPLOYQT_EXECUTABLE}" \"$<TARGET_FILE:${PROJECT_NAME}>\"
-	)
-endif()
-
 ############################################
 ### Setup source groups                  ###
 ############################################
@@ -203,9 +160,9 @@ GROUP_FILES("${Sources}" "Source Files")
 GROUP_FILES("${Headers}" "Header Files")
 
 # Specifies include libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC QML_Project)
+target_link_libraries(${PROJECT_NAME} PUBLIC CPP_Project)
 
 # Specifies include directories to use when compiling a given target
 target_include_directories(${PROJECT_NAME} PUBLIC 
 	${CMAKE_CURRENT_LIST_DIR} 
-	${CMAKE_SOURCE_DIR}/QML_Project/Headers)
+	${CMAKE_SOURCE_DIR}/CPP_Project/Headers)

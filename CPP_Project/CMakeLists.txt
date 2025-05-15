@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.19.0 FATAL_ERROR)
 ### Project Configuration                ###
 ############################################
 
-project(QML_Project LANGUAGES CXX VERSION "0.0.0")
+project(CPP_Project LANGUAGES CXX VERSION "0.0.0")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 configure_file(Config.h.in Config.h)
 
@@ -43,80 +43,13 @@ file(GLOB_RECURSE Headers
      "Headers/*/*.h"
 )
 
-file(GLOB_RECURSE CPP_Sources
+file(GLOB_RECURSE Sources
      "main.cpp"
      "Sources/*.cpp"
-     "Headers/Qt/*/*.cpp"
-     "Sources/Qt/*.cpp"
+     "Sources/*/*.cpp"
 )
-
-file(GLOB_RECURSE QML_Sources
-     "Sources/QML/*.qml"
-)
-
-# Combine C++ and QML sources
-set(Sources ${CPP_Sources} ${QML_Sources})
 
 include_directories(Headers Sources)
-
-############################################
-### Qt6 Configuration                    ###
-############################################
-
-if ("$ENV{QT6_DIR}" STREQUAL "")
-	set(QT6_DIR "E:\\Qt\\6.8.0\\msvc2022_64\\")
-else()
-	set(QT6_DIR "$ENV{QT6_DIR}")
-endif()
-
-if (EXISTS ${QT6_DIR})
-	set(CMAKE_PREFIX_PATH ${QT6_DIR})
-else()
-	message(WARNING "The specified qt6 path '${QT6_DIR}' does not exist")
-endif()
-
-find_package(Qt6 REQUIRED COMPONENTS Widgets Qml Quick QuickControls2 Gui LinguistTools)
-qt_standard_project_setup()
-qt6_add_resources(RSCS resources.qrc)
-add_custom_target(gen_qrc DEPENDS ${RSCS})
-
-############################################
-### Translation Configuration            ###
-############################################
-
-set(TS_DIR ${PROJECT_NAME}/resources/Translations)
-set(TS_FILES ${TS_DIR}/app_de.ts ${TS_DIR}/app_en.ts)
-
-# Ensure the translations directory exists
-file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/${TS_DIR})
-
-# Define a custom target for updating translations
-add_custom_target(_translations_update
-    COMMAND ${QT6_DIR}/bin/lupdate ${CMAKE_SOURCE_DIR} -ts ${TS_FILES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Updating translation files"
-)
-
-# Define a custom target for compiling translations
-add_custom_target(_translations_compile
-    DEPENDS ${TS_FILES}
-    COMMAND ${QT6_DIR}/bin/lrelease ${TS_FILES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Compiling translation files"
-)
-
-# Ensure the compiled .qm files are part of the build
-set(QM_FILES "")
-foreach(TS_FILE ${TS_FILES})
-    get_filename_component(QM_FILE ${TS_FILE} NAME_WE)
-    set(QM_FILES ${QM_FILES} ${CMAKE_SOURCE_DIR}/${TS_DIR}/${QM_FILE}.qm)
-endforeach()
-
-# Ensure the target directory exists before copying
-add_custom_command(TARGET _translations_compile POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/translations
-    COMMAND ${CMAKE_COMMAND} -E copy ${QM_FILES} $<TARGET_FILE_DIR:${PROJECT_NAME}>/translations
-)
 
 ############################################
 ### Clang-Format Configuration           ###
@@ -131,7 +64,7 @@ if(USE_CLANG_FORMAT)
             -style=file:${CMAKE_SOURCE_DIR}/Configs/.clang-format
             -i
             ${Headers}
-            ${CPP_Sources}
+            ${Sources}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Formatting code with clang-format"
         )
@@ -153,7 +86,7 @@ if(USE_CLANG_TIDY)
 			--config-file=${CMAKE_SOURCE_DIR}/Configs/.clang-tidy
             -p=${CMAKE_BINARY_DIR}
             ${Headers}
-            ${CPP_Sources}
+            ${Sources}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Running clang-tidy for static analysis"
         )
@@ -194,9 +127,6 @@ message(STATUS "")
 message(STATUS "  Third Party Include Directory:            ${THIRD_PARTY_INCLUDE_DIR}")
 message(STATUS "  ${MAIN_PROJECT_NAME}_BUILD_TARGET_TYPE:  ${${MAIN_PROJECT_NAME}_BUILD_TARGET_TYPE}")
 message(STATUS "  ${doc_sub_target_name}_BUILD_DOC:          ${${doc_sub_target_name}_BUILD_DOC}")
-message(STATUS "  Qt6 Directory (QT6_DIR env):              ${QT6_DIR}")
-message(STATUS "  Translation Files Directory:              ${CMAKE_SOURCE_DIR}/${TS_DIR}")
-message(STATUS "  Translation Files:                        ${TS_FILES}")
 message(STATUS "")
 message(STATUS "-----------------------------------------------")
 message(STATUS "")
@@ -216,7 +146,6 @@ else()
 	message(FATAL_ERROR "Build type not specified")
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 
 if (WIN32)
@@ -242,34 +171,6 @@ target_sources(${PROJECT_NAME}
         ${Sources}
 		${RSCS}
 )
-
-if (WIN32)
-	# windeployqt takes an .exe file or a directory that contains an .exe file 
-	# as an argument, and scans the executable for dependencies
-	#
-	# Link: https://doc.qt.io/qt-6/windows-deployment.html
-	#
-	if (${MAIN_PROJECT_NAME}_BUILD_TARGET_TYPE STREQUAL executable)
-		# Retrieve the absolute path to qmake and then use that path to find
-		# the windeployqt executable
-        find_program(WINDEPLOYQT_ENV_SETUP qtenv2.bat HINTS "${QT6_DIR}/bin")
-        find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT6_DIR}/bin")
-
-		# Run windeployqt immediately after build
-		add_custom_command(TARGET ${PROJECT_NAME}
-			POST_BUILD
-			COMMAND "${WINDEPLOYQT_ENV_SETUP}" && "${WINDEPLOYQT_EXECUTABLE}" \"$<TARGET_FILE:${PROJECT_NAME}>\" "--qmldir=${CMAKE_CURRENT_SOURCE_DIR}/Sources/QML"
-			COMMENT "Running windeployqt..."
-		)
-		
-		# Run windeployqt immediately after build
-		#add_custom_command(TARGET ${PROJECT_NAME}
-		#	POST_BUILD
-		#	COMMAND "${WINDEPLOYQT_ENV_SETUP}" && "${WINDEPLOYQT_EXECUTABLE}" \"$<TARGET_FILE:${PROJECT_NAME}>\" "--qmldir=${CMAKE_CURRENT_SOURCE_DIR}/Style"
-		#	COMMENT "Running windeployqt..."
-		#)
-	endif()
-endif()
 
 ############################################
 ### Setup source groups                  ###

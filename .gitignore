@@ -40,12 +40,5 @@
 **/install*/*
 **/ThirdPartyDir*/*
 
-# Ignore compiled translation files
-*.qm
-
 # Ignore log files
 *.log
-
-# Ignore Qt 6.x folders
-Scripts/*/Qt*/
-**/6*/
