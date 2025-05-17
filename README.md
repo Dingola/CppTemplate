@@ -1,16 +1,16 @@
-# QML Desktop App Template
+# Cpp Template
 
 ## 🚀 [Build Status]
 
 ### 🛠 Build and ✅ Test
 
-[![Linux Build and Test](https://github.com/Dingola/QMLDesktopAppTemplate/actions/workflows/build_and_test_linux.yml/badge.svg)](https://github.com/Dingola/QMLDesktopAppTemplate/actions/workflows/build_and_test_linux.yml)
-[![macOS Build and Test](https://github.com/Dingola/QMLDesktopAppTemplate/actions/workflows/build_and_test_macos.yml/badge.svg)](https://github.com/Dingola/QMLDesktopAppTemplate/actions/workflows/build_and_test_macos.yml)
-[![Windows Build and Test](https://github.com/Dingola/QMLDesktopAppTemplate/actions/workflows/build_and_test_windows.yml/badge.svg)](https://github.com/Dingola/QMLDesktopAppTemplate/actions/workflows/build_and_test_windows.yml)
+[![Linux Build and Test](https://github.com/Dingola/CppTemplate/actions/workflows/build_and_test_linux.yml/badge.svg)](https://github.com/Dingola/CppTemplate/actions/workflows/build_and_test_linux.yml)
+[![macOS Build and Test](https://github.com/Dingola/CppTemplate/actions/workflows/build_and_test_macos.yml/badge.svg)](https://github.com/Dingola/CppTemplate/actions/workflows/build_and_test_macos.yml)
+[![Windows Build and Test](https://github.com/Dingola/CppTemplate/actions/workflows/build_and_test_windows.yml/badge.svg)](https://github.com/Dingola/CppTemplate/actions/workflows/build_and_test_windows.yml)
 
 ### Code Coverage
 
-[![codecov](https://codecov.io/gh/Dingola/QMLDesktopAppTemplate/graph/badge.svg?token=XH7TDPWZUJ)](https://codecov.io/gh/Dingola/QMLDesktopAppTemplate)
+[![codecov](https://codecov.io/gh/Dingola/CppTemplate/graph/badge.svg?token=IUM73S6W22)](https://codecov.io/gh/Dingola/CppTemplate)
 
 <br><br>
 
@@ -75,7 +75,6 @@ Once you have generated the required tokens, add them as secrets in your GitHub 
   - [4) Run the project](#4-run-the-project)
   - [5) Deployment](#5-deployment)
   - [6) Using Docker](#6-using-docker)
-- [Translations](#translations)
 - [Code Style and Linting](#code-style-and-linting)
 
 <br><br>
@@ -84,25 +83,19 @@ Once you have generated the required tokens, add them as secrets in your GitHub 
 
 | Graph     | Description                                                                                                                                                                                                                     | Visualization                                                                 |
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| **Sunburst** | The inner-most circle represents the entire project. Moving outward are folders, and finally individual files. The size and color of each slice represent the number of statements and the coverage, respectively. | <img src="https://codecov.io/gh/Dingola/QMLDesktopAppTemplate/graphs/sunburst.svg?token=XH7TDPWZUJ" alt="Sunburst" height="100" width="200"> |
-| **Grid**     | Each block represents a single file in the project. The size and color of each block represent the number of statements and the coverage, respectively.                                                                      | <img src="https://codecov.io/gh/Dingola/QMLDesktopAppTemplate/graphs/tree.svg?token=XH7TDPWZUJ" alt="Grid" height="100" width="200">         |
-| **Icicle**   | The top section represents the entire project, followed by folders and individual files. The size and color of each slice represent the number of statements and the coverage, respectively.                                 | <img src="https://codecov.io/gh/Dingola/QMLDesktopAppTemplate/graphs/icicle.svg?token=XH7TDPWZUJ" alt="Icicle" height="150" width="400">     |
+| **Sunburst** | The inner-most circle represents the entire project. Moving outward are folders, and finally individual files. The size and color of each slice represent the number of statements and the coverage, respectively. | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/sunburst.svg?token=IUM73S6W22" alt="Sunburst" height="100" width="200"> |
+| **Grid**     | Each block represents a single file in the project. The size and color of each block represent the number of statements and the coverage, respectively.                                                                      | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/tree.svg?token=IUM73S6W22" alt="Grid" height="100" width="200">         |
+| **Icicle**   | The top section represents the entire project, followed by folders and individual files. The size and color of each slice represent the number of statements and the coverage, respectively.                                 | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/icicle.svg?token=IUM73S6W22" alt="Icicle" height="150" width="400">     |
 
 <br><br>
 
 
 ## [Description]
-This project is a template for creating QML-based desktop applications. The solution 
-is divided into two parts: the main project and a test project. By default, only the 
-main project is built. The test project can be built if desired, controlled by a CMake 
-boolean variable `<PROJECT_NAME>_BUILD_TEST_PROJECT`. Additionally, the CMake variable 
-`<PROJECT_NAME>_BUILD_TARGET_TYPE` must be set to `static_library` for the test project 
-to be executed.
+This project is a template for creating C++-based applications. The solution is divided into two parts: the main project and a test project. 
+By default, only the main project is built. The test project can be built if desired, controlled by a CMake boolean variable `<PROJECT_NAME>_BUILD_TEST_PROJECT`. 
+Additionally, the CMake variable `<PROJECT_NAME>_BUILD_TARGET_TYPE` must be set to `static_library` for the test project to be executed.
 
-The template includes various classes, models, and services to load and display settings 
-or translations. Additionally, it is possible to generate documentation for the project 
-using Doxygen. The template also includes GitHub workflows (CI builds) for both Linux 
-and Windows.
+The template allows for the generation of project documentation using Doxygen. It also includes GitHub workflows (CI builds) for Linux, macOS, and Windows.
 <br><br>
 
 ## [Solution Folder Structure]
@@ -113,7 +106,7 @@ and Windows.
 ├── .github                 # GitHub-specific files (CI workflows)
 ├── CMake                   # CMake files used in both the project and tests
 ├── Configs                 # Configuration files for clang-tidy, clang-format, Doxygen, etc.
-├── QML_Project             # The main project
+├── CPP_Project             # The main project
 │   ├── CMake               # CMake files specific to the project
 │   ├── Headers             # Header files
 │   ├── Resources           # Resource files
@@ -121,9 +114,8 @@ and Windows.
 │   ├── ThirdParty          # CMake files for external dependencies
 │   ├── CMakeLists.txt      # CMake configuration file for the project
 │   ├── Config.h.in         # Configuration header template
-│   ├── main.cpp            # Main application entry point
-│   └── resources.qrc       # Qt resource file
-├── QML_Project_Tests       # Tests for the project
+│   └── main.cpp            # Main application entry point
+├── CPP_Project_Tests       # Tests for the project
 │   ├── Headers             # Header files for tests
 │   ├── Sources             # Source files for tests
 │   ├── ThirdParty          # CMake files for external dependencies used in tests
@@ -182,7 +174,7 @@ and Windows.
 <br>
 
 ### Environment Variables
-* **QT_DIR:** Specifies the path to the Qt 6 installation.
+* _No environment variables are required for this template at the moment._
 <br><br><br>
 
 ## [Supported Platforms]
@@ -196,9 +188,7 @@ and Windows.
 ### 1) Prerequisites
 * CMake ( Minimum required version 3.19.0 ): [Download](https://cmake.org/download/ "CMake Downloads")
 * A C++20 compatible compiler (e.g., GCC 10+, Clang 10+, MSVC 19.28+)
-* Qt Installer (Qt 6.8): [Download](https://www.qt.io/download-qt-installer-oss)
 * Optional: Docker (if using the Docker workflow in [6) Using Docker](#6-using-docker)): [Download Docker](https://www.docker.com/)
-* Optional: VcXsrv (if displaying the GUI on a Windows host in [6) Using Docker](#6-using-docker)): [Download VcXsrv](https://sourceforge.net/projects/vcxsrv/)
 * Optional: Doxygen (if documentation generation is enabled): [Download](https://www.doxygen.nl/download.html)
 * Optional for Doxygen is LaTeX if enabled in `Doxygen.in`-File and installed.
 * Optional: `zip` for creating ZIP archives (if `BUILD_ZIP_ARCHIVE` is set to `true` in `build_and_deploy.sh`)
@@ -219,8 +209,8 @@ and Windows.
 
 ### 2) Setting up
 ```
-git clone https://github.com/Dingola/QMLDesktopAppTemplate.git
-cd QMLDesktopAppTemplate/
+git clone https://github.com/Dingola/CppTemplate.git
+cd CppTemplate/
 ```
 <br>
 
@@ -228,8 +218,6 @@ cd QMLDesktopAppTemplate/
 <br>
 
 ### 3) Configuring and Building
-> [!IMPORTANT]
-> Ensure that the `QT_DIR` environment variable is set, for example: `..\Qt\6.8.0\msvc2022_64`
 ```
 cmake -B _build -S . -G "Visual Studio 17 2022" -A x64
 cd _build
@@ -242,8 +230,8 @@ cmake --build . --config Release
 
 ### 4) Run the project
 ```
-cd QMLDesktopAppTemplate/Release/
-./QMLDesktopAppTemplate.exe
+cd CppTemplate/Release/
+./CppTemplate.exe
 ```
 <br>
 
@@ -270,96 +258,29 @@ To create an NSIS installer (Windows only), set `BUILD_NSIS_INSTALLER` to `true`
 #### 1. Build the Docker Image
 Build the Docker image using the following command:
 ```
-docker build -t QMLDesktopAppTemplate-DockerImage .
+docker build -t CppTemplate-DockerImage .
 ```
 <br>
 
 #### 2. Ways to Run the Docker Image
 - **Run directly:**
 ```
-docker run QMLDesktopAppTemplate-DockerImage
+docker run CppTemplate-DockerImage
 ```
 - **Start an interactive Bash shell:**
 ```
-docker run -it QMLDesktopAppTemplate-DockerImage bash
+docker run -it CppTemplate-DockerImage bash
 ```
 <br>
 
 #### 3. Run the App or Tests in the Container
-- **Start the app (virtual display with Xvfb):**
-```
-Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp & export DISPLAY=:99 "./_build_app_release/QML_Project/QMLDesktopAppTemplate"
-```
-- **Run the tests (virtual display with Xvfb):**
-```
-Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp & export DISPLAY=:99 "./_build_tests_release/QML_Project_Tests/QMLDesktopAppTemplate_Tests"
-```
-<br>
-
-#### 4. Display GUI on the Host Machine (Windows)
-1. Download and install **VcXsrv Windows X Server**: [Download VcXsrv](https://sourceforge.net/projects/vcxsrv/).
-2. Configure VcXsrv:
-   - Select **Multiple windows** and set **Display number** to `99`.
-   - Choose **Start no client**.
-   - Enable **Disable access control**.
-   - Alternatively, use the preconfigured `config.xlaunch` file located in the `Configs` folder of this project. Double-click the file to launch VcXsrv with the correct settings.
-3. Start the Docker container:
-```
-docker run -it --name QMLDesktopAppTemplate-Container --network host -e DISPLAY=<IP-ADDRESS>:99.0 -e TERM=xterm-256color -e QT_X11_NO_MITSHM=1 QMLDesktopAppTemplate-DockerImage bash
-```
-> [!NOTE]
-> Replace `<IP-ADDRESS>` with the host's IP address (e.g., `192.168.1.2`). Do not use `127.0.0.1` or `localhost`.
-
-4. Inside the container:
 - **Start the app:**
 ```
-"./_build_app_release/QML_Project/QMLDesktopAppTemplate"
+./_build_app_release/Cpp_Project/CppTemplate
 ```
 - **Run the tests:**
 ```
-"./_build_tests_release/QML_Project_Tests/QMLDesktopAppTemplate_Tests"
-```
-<br>
-
-#### 5. Note on Display Number
-- The display number in the `DISPLAY` variable is **99.0**, not `99`.
-- You can verify this in the VcXsrv logs. Look for a line like:
-```
-winClipboardThreadProc - DISPLAY=127.0.0.1:99.0
-```
-- Ensure the `DISPLAY` variable is set correctly, e.g.:
-```
-export DISPLAY=192.168.1.2:99.0
-```
-<br>
-
-#### 6. Additional Notes
-- Ensure the firewall on the host allows connections to the X11 server (VcXsrv).
-- If the GUI does not display, check the `DISPLAY` variable and the VcXsrv logs.
-<br><br><br>
-
-## [Translations]
-The project includes custom targets for updating and compiling translation files. These targets are defined in the CMake file located in `QMLDesktopAppTemplate/QML_Project` and can be used to manage translation files located in the `QMLDesktopAppTemplate/QML_Project/resources/Translations` directory.
-
-> [!NOTE]
-> The translation files are specified in the CMake file. Initially, only `app_de.ts` and `app_en.ts` are included. To support additional languages, you will need to add the corresponding `.ts` files to the CMake configuration.
-
-<br>
-
-### Updating Translations
-To update the translation files, use the following custom target:
-```
-_translations_update
-```
-<br>
-
----
-<br>
-
-### Compiling Translations
-To compile the translation files, use the following custom target:
-```
-_translations_compile
+./_build_tests_release/Cpp_Project_Tests/CppTemplate_Tests
 ```
 <br><br><br>
 
