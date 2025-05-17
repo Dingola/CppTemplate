@@ -258,29 +258,29 @@ To create an NSIS installer (Windows only), set `BUILD_NSIS_INSTALLER` to `true`
 #### 1. Build the Docker Image
 Build the Docker image using the following command:
 ```
-docker build -t CppTemplate-DockerImage .
+docker build -t cpptemplate-dockerimage .
 ```
 <br>
 
 #### 2. Ways to Run the Docker Image
 - **Run directly:**
 ```
-docker run CppTemplate-DockerImage
+docker run cpptemplate-dockerimage
 ```
 - **Start an interactive Bash shell:**
 ```
-docker run -it CppTemplate-DockerImage bash
+docker run -it cpptemplate-dockerimage bash
 ```
 <br>
 
 #### 3. Run the App or Tests in the Container
 - **Start the app:**
 ```
-./_build_app_release/Cpp_Project/CppTemplate
+./_build_app_release/CPP_Project/CppTemplate
 ```
 - **Run the tests:**
 ```
-./_build_tests_release/Cpp_Project_Tests/CppTemplate_Tests
+./_build_tests_release/CPP_Project_Tests/CppTemplate_Tests
 ```
 <br><br><br>
 
