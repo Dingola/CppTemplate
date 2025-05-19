@@ -133,16 +133,6 @@ add_executable(${PROJECT_NAME})
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/GoogleTest.cmake)
 
-if (WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES 
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
-        WIN32_EXECUTABLE ON
-    )
-elseif (APPLE)
-    set_target_properties(${PROJECT_NAME} PROPERTIES 
-        MACOSX_BUNDLE ON
-    )
-endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${MAIN_PROJECT_NAME}_Tests)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

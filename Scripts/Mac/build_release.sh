@@ -9,21 +9,16 @@ BUILD_TYPE="Release"
 BUILD_TARGET_TYPE="executable"
 BUILD_TEST_PROJECT=false
 THIRD_PARTY_INCLUDE_DIR="$(pwd)/ThirdPartyDir"
-QT_VERSION="6.8.0"
-QT_COMPILER="clang_64"
-QT_COMPILER_DIR="macOS"
-MIN_REQUIRED_PYTHON_VERSION="3.13"
-MIN_REQUIRED_PYTHON_VERSION_SUFFIX="__EMPTY__"
 BUILD_DIR_NAME="_build_release"
 
 # Setup and build the project
-setup_and_build $PROJECT_DIR $PROJECT_NAME $BUILD_TYPE $BUILD_TARGET_TYPE $BUILD_TEST_PROJECT $THIRD_PARTY_INCLUDE_DIR $QT_VERSION $QT_COMPILER $QT_COMPILER_DIR $MIN_REQUIRED_PYTHON_VERSION $MIN_REQUIRED_PYTHON_VERSION_SUFFIX $BUILD_DIR_NAME
+setup_and_build $PROJECT_DIR $PROJECT_NAME $BUILD_TYPE $BUILD_TARGET_TYPE $BUILD_TEST_PROJECT $THIRD_PARTY_INCLUDE_DIR $BUILD_DIR_NAME
 
 # Ask the user if they want to run the built project
 read -p "Do you want to run the built project? (y/n): " run_choice
 BUILD_DIR="$(pwd)/$BUILD_DIR_NAME"
 if [[ "$run_choice" =~ ^[yY]$ ]]; then
-    open "$BUILD_DIR/QML_Project/${PROJECT_NAME}.app"
+    open "$BUILD_DIR/CPP_Project/${PROJECT_NAME}.app"
 fi
 
 read -p "Press enter to continue"

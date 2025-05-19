@@ -148,20 +148,6 @@ endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 
-if (WIN32)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set_target_properties(${PROJECT_NAME} PROPERTIES 
-            LINK_FLAGS "/SUBSYSTEM:CONSOLE"
-        )
-    endif()
-    set_target_properties(${PROJECT_NAME} PROPERTIES 
-        WIN32_EXECUTABLE ON
-    )
-elseif (APPLE)
-    set_target_properties(${PROJECT_NAME} PROPERTIES 
-        MACOSX_BUNDLE ON
-    )
-endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${MAIN_PROJECT_NAME})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
