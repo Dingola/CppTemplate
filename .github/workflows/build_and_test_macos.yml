@@ -54,4 +54,5 @@ jobs:
       # Run Tests
       - name: Run Tests
         run: |
-          ./build/CPP_Project_Tests/${{ env.MAIN_PROJECT_NAME }}_Tests.app/Contents/MacOS/${{ env.MAIN_PROJECT_NAME }}_Tests
+          ./build/CPP_Project_Tests/${{ env.MAIN_PROJECT_NAME }}_Tests
+
