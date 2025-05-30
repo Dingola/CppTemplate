@@ -138,9 +138,9 @@ add_subdirectory(CPP_Project)
 # Add the test project conditionally
 if (${MAIN_PROJECT_NAME}_BUILD_TEST_PROJECT)
   add_subdirectory(CPP_Project_Tests)
-  set(startup_project CPP_Project_Tests)
+  set(startup_project ${MAIN_PROJECT_NAME}_Tests)
 else()
-  set(startup_project CPP_Project)
+  set(startup_project ${MAIN_PROJECT_NAME})
 endif()
 
 # Set the startup project
