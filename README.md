@@ -10,7 +10,7 @@
 
 ### Code Coverage
 
-[![codecov](https://codecov.io/gh/Dingola/CppTemplate/graph/badge.svg?token=IUM73S6W22)](https://codecov.io/gh/Dingola/CppTemplate)
+[![codecov](https://codecov.io/gh/Dingola/CppTemplate/graph/badge.svg)](https://codecov.io/gh/Dingola/CppTemplate)
 
 <br><br>
 
@@ -83,9 +83,9 @@ Once you have generated the required tokens, add them as secrets in your GitHub 
 
 | Graph     | Description                                                                                                                                                                                                                     | Visualization                                                                 |
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| **Sunburst** | The inner-most circle represents the entire project. Moving outward are folders, and finally individual files. The size and color of each slice represent the number of statements and the coverage, respectively. | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/sunburst.svg?token=IUM73S6W22" alt="Sunburst" height="100" width="200"> |
-| **Grid**     | Each block represents a single file in the project. The size and color of each block represent the number of statements and the coverage, respectively.                                                                      | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/tree.svg?token=IUM73S6W22" alt="Grid" height="100" width="200">         |
-| **Icicle**   | The top section represents the entire project, followed by folders and individual files. The size and color of each slice represent the number of statements and the coverage, respectively.                                 | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/icicle.svg?token=IUM73S6W22" alt="Icicle" height="150" width="400">     |
+| **Sunburst** | The inner-most circle represents the entire project. Moving outward are folders, and finally individual files. The size and color of each slice represent the number of statements and the coverage, respectively. | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/sunburst.svg" alt="Sunburst" height="100" width="200"> |
+| **Grid**     | Each block represents a single file in the project. The size and color of each block represent the number of statements and the coverage, respectively.                                                                      | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/tree.svg" alt="Grid" height="100" width="200">         |
+| **Icicle**   | The top section represents the entire project, followed by folders and individual files. The size and color of each slice represent the number of statements and the coverage, respectively.                                 | <img src="https://codecov.io/gh/Dingola/CppTemplate/graphs/icicle.svg" alt="Icicle" height="150" width="400">     |
 
 <br><br>
 
@@ -142,6 +142,8 @@ The template allows for the generation of project documentation using Doxygen. I
 
 * **<PROJECT_NAME>_BUILD_TEST_PROJECT:** Specifies whether the **TestProject** should also be built. Default is **Off**.
 
+* **<PROJECT_NAME>_INCLUDE_THIRD_LIBS_INTO_SOLUTION:** Specifies whether third-party source code should be added directly to the generated IDE solution with `add_subdirectory`. Default is **Off**.
+
 * **USE_CLANG_FORMAT:** Specifies whether `clang-format` should be used for code formatting. Default is **Off**.
 
 * **USE_CLANG_TIDY:** Specifies whether `clang-tidy` should be used for static analysis. Default is **Off**.
@@ -186,7 +188,7 @@ The template allows for the generation of project documentation using Doxygen. I
 ## [How To Install and Run]
 
 ### 1) Prerequisites
-* CMake ( Minimum required version 3.19.0 ): [Download](https://cmake.org/download/ "CMake Downloads")
+* CMake (minimum required version 3.29.3): [Download](https://cmake.org/download/ "CMake Downloads")
 * A C++20 compatible compiler (e.g., GCC 10+, Clang 10+, MSVC 19.28+)
 * Optional: Docker (if using the Docker workflow in [6) Using Docker](#6-using-docker)): [Download Docker](https://www.docker.com/)
 * Optional: Doxygen (if documentation generation is enabled): [Download](https://www.doxygen.nl/download.html)
@@ -319,24 +321,24 @@ To use `clang-format` and `clang-tidy` in your project, you need to set the foll
 To format the C++ code and run static analysis, use the following custom targets:
 
 ```
-_run_clang_format_project
-_run_clang_tidy_project
+<PROJECT_NAME>_run_clang_format_project
+<PROJECT_NAME>_run_clang_tidy_project
 ```
 
 To format the C++ code, run the following command after enabling the USE_CLANG_FORMAT option and specifying the path to clang-format:
 
 ```
 cmake -DUSE_CLANG_FORMAT=ON -DCLANG_TOOLS_PATH="C:/path/to/clang+llvm-18.1.8-x86_64-pc-windows-msvc/bin" ..
-cmake --build . --target _run_clang_format_project
-cmake --build . --target _run_clang_format_tests
+cmake --build . --target <PROJECT_NAME>_run_clang_format_project
+cmake --build . --target <PROJECT_NAME>_Tests_run_clang_format_tests
 ```
 
 To run static analysis with clang-tidy, ensure the USE_CLANG_TIDY option is enabled and the path to clang-tidy is specified:
 
 ```
 cmake -DUSE_CLANG_TIDY=ON -DCLANG_TOOLS_PATH="C:/path/to/clang+llvm-18.1.8-x86_64-pc-windows-msvc/bin" ..
-cmake --build . --target _run_clang_tidy_project
-cmake --build . --target _run_clang_tidy_tests
+cmake --build . --target <PROJECT_NAME>_run_clang_tidy_project
+cmake --build . --target <PROJECT_NAME>_Tests_run_clang_tidy_tests
 ```
 <br>
 

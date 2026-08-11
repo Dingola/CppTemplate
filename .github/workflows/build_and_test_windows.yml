@@ -38,6 +38,12 @@ jobs:
       - name: Prepare third-party directory
         run: mkdir ${{ env.THIRD_PARTY_INCLUDE_DIR }}
 
+      # Install CMake
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '4.1.1'
+
       # Configure CMake
       - name: Configure CMake
         run: |

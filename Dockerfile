@@ -12,14 +12,20 @@ ENV RUN_APP_ON_CONTAINER_START=false
 ENV THIRD_PARTY_INCLUDE_DIR=/home/user/ThirdParty
 ENV PROJECT_NAME=CppTemplate
 
-# Install required system packages and CMake 3.28.0-rc3
-RUN apt-get update && apt-get install -y \
+# Install required system packages and CMake 3.29.3
+RUN apt-get update \
+    && apt-get install -y software-properties-common ca-certificates \
+    && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+    && apt-get update \
+    && apt-get install -y \
     build-essential \
+    gcc-11 \
+    g++-11 \
     wget \
     unzip \
     locales \
     git \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.28.0-rc3/cmake-3.28.0-rc3-linux-x86_64.sh -O /tmp/cmake.sh \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.29.3/cmake-3.29.3-linux-x86_64.sh -O /tmp/cmake.sh \
     && chmod +x /tmp/cmake.sh \
     && /tmp/cmake.sh --skip-license --prefix=/usr/local || exit 1
 
@@ -28,6 +34,10 @@ RUN apt-get update && apt-get install -y \
 RUN locale-gen en_US.UTF-8 || exit 1
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+
+# Use GCC 11 for all builds to provide complete C++20 support
+ENV CC=/usr/bin/gcc-11
+ENV CXX=/usr/bin/g++-11
 
 # Create a working directory
 WORKDIR /app
