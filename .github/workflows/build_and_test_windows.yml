@@ -24,8 +24,8 @@ env:
 #------------------------------------------------
 jobs:
   build_and_test:
-    name: Build and Test on Windows Latest
-    runs-on: windows-latest
+    name: Build and Test on Windows 2022
+    runs-on: windows-2022
 
     steps:
       # Checkout the repository and submodules
