@@ -1,0 +1,75 @@
+name: Validate Copier Template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GENERATED_PROJECT_NAME: CppTemplateSmokeTest
+  BUILD_TYPE: Debug
+
+jobs:
+  generate_build_and_test:
+    name: Generate, Build, and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout template repository
+        uses: actions/checkout@v4
+
+      - name: Install Copier
+        run: python -m pip install "copier>=9,<10"
+
+      - name: Generate smoke-test project
+        shell: bash
+        run: |
+          generated_dir="${RUNNER_TEMP}/${GENERATED_PROJECT_NAME}"
+          copier copy \
+            --defaults \
+            --vcs-ref HEAD \
+            --data "project_name=${GENERATED_PROJECT_NAME}" \
+            --data "project_type=static_library" \
+            . "${generated_dir}"
+
+          test -f "${generated_dir}/.copier-answers.yml"
+          test -f "${generated_dir}/CMakeLists.txt"
+          test -f "${generated_dir}/.github/release-config.env"
+          test -f "${generated_dir}/.github/workflows/release.yml"
+          test -f "${generated_dir}/CPP_Project/main.cpp"
+          grep -q '^PROJECT_TYPE=static_library$' "${generated_dir}/.github/release-config.env"
+          grep -q 'contents: write' "${generated_dir}/.github/workflows/release.yml"
+          ! grep -Eq 'actions/(upload|download)-artifact' "${generated_dir}/.github/workflows/release.yml"
+          test ! -e "${generated_dir}/copier.yml"
+          test ! -e "${generated_dir}/initialize.cmd"
+          test ! -e "${generated_dir}/initialize.ps1"
+          test ! -e "${generated_dir}/template"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "4.1.1"
+
+      - name: Configure generated project
+        shell: bash
+        run: |
+          generated_dir="${RUNNER_TEMP}/${GENERATED_PROJECT_NAME}"
+          cmake \
+            -S "${generated_dir}" \
+            -B "${generated_dir}/build" \
+            -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+            -D"${GENERATED_PROJECT_NAME}_BUILD_TARGET_TYPE=static_library" \
+            -D"${GENERATED_PROJECT_NAME}_BUILD_TEST_PROJECT=ON" \
+            -DTHIRD_PARTY_INCLUDE_DIR="${RUNNER_TEMP}/ThirdParty"
+
+      - name: Build generated project
+        run: cmake --build "${RUNNER_TEMP}/${GENERATED_PROJECT_NAME}/build" --config "${BUILD_TYPE}"
+
+      - name: Run generated tests
+        run: "${RUNNER_TEMP}/${GENERATED_PROJECT_NAME}/build/CPP_Project_Tests/${GENERATED_PROJECT_NAME}_Tests"

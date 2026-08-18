@@ -10,7 +10,7 @@ ENV BUILD_APP_PROJECT=true
 ENV BUILD_TEST_PROJECT=true
 ENV RUN_APP_ON_CONTAINER_START=false
 ENV THIRD_PARTY_INCLUDE_DIR=/home/user/ThirdParty
-ENV PROJECT_NAME=CppTemplate
+ENV PROJECT_NAME={{ project_name }}
 
 # Install required system packages and CMake 3.29.3
 RUN apt-get update \

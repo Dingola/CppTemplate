@@ -1,0 +1,367 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare_release:
+    name: Prepare Draft Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      cmake_version: ${{ steps.version.outputs.cmake_version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+
+    steps:
+      - name: Validate and resolve version
+        id: version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: ${tag}"
+            exit 1
+          fi
+
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "cmake_version=${version%%-*}" >> "${GITHUB_OUTPUT}"
+          if [[ "${version}" == *-* ]]; then
+            echo "prerelease=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "prerelease=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Create or reset draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IS_PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        shell: bash
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release edit "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft \
+              --title "${GITHUB_REF_NAME}"
+          else
+            arguments=(
+              "${GITHUB_REF_NAME}"
+              --repo "${GITHUB_REPOSITORY}"
+              --draft
+              --verify-tag
+              --generate-notes
+              --title "${GITHUB_REF_NAME}"
+            )
+            if [[ "${IS_PRERELEASE}" == "true" ]]; then
+              arguments+=(--prerelease)
+            fi
+            gh release create "${arguments[@]}"
+          fi
+
+  test:
+    name: Test Tagged Revision
+    needs: prepare_release
+    runs-on: ubuntu-latest
+    env:
+      BUILD_TYPE: Release
+      CMAKE_PROJECT_VERSION: ${{ needs.prepare_release.outputs.cmake_version }}
+      THIRD_PARTY_INCLUDE_DIR: ${{ runner.temp }}/ThirdParty
+
+    steps:
+      - name: Checkout tagged revision
+        uses: actions/checkout@v4
+
+      - name: Load project configuration
+        shell: bash
+        run: cat .github/release-config.env >> "${GITHUB_ENV}"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "4.1.1"
+
+      - name: Configure tests
+        shell: bash
+        run: |
+          cmake \
+            -S . \
+            -B build-tests \
+            -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+            -DMAIN_PROJECT_NAME="${PROJECT_NAME}" \
+            -DMAIN_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}" \
+            -D"${PROJECT_NAME}_BUILD_TARGET_TYPE=static_library" \
+            -D"${PROJECT_NAME}_BUILD_TEST_PROJECT=ON" \
+            -DTHIRD_PARTY_INCLUDE_DIR="${THIRD_PARTY_INCLUDE_DIR}"
+
+      - name: Build tests
+        run: cmake --build build-tests --config "${BUILD_TYPE}"
+
+      - name: Run tests
+        shell: bash
+        run: "./build-tests/CPP_Project_Tests/${PROJECT_NAME}_Tests"
+
+  build_windows:
+    name: Build Windows Package
+    needs:
+      - prepare_release
+      - test
+    runs-on: windows-2022
+    env:
+      BUILD_TYPE: Release
+      RELEASE_VERSION: ${{ needs.prepare_release.outputs.version }}
+      CMAKE_PROJECT_VERSION: ${{ needs.prepare_release.outputs.cmake_version }}
+      THIRD_PARTY_INCLUDE_DIR: ${{ runner.temp }}\ThirdParty
+
+    steps:
+      - name: Checkout tagged revision
+        uses: actions/checkout@v4
+
+      - name: Load project configuration
+        shell: bash
+        run: cat .github/release-config.env >> "${GITHUB_ENV}"
+
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "4.1.1"
+
+      - name: Install NSIS
+        if: env.PROJECT_TYPE == 'executable'
+        run: choco install nsis --yes --no-progress
+
+      - name: Configure release
+        shell: pwsh
+        run: |
+          cmake -S . -B build-release `
+            "-DCMAKE_BUILD_TYPE=$env:BUILD_TYPE" `
+            "-DMAIN_PROJECT_NAME=$env:PROJECT_NAME" `
+            "-DMAIN_PROJECT_VERSION=$env:CMAKE_PROJECT_VERSION" `
+            "-D${env:PROJECT_NAME}_BUILD_TARGET_TYPE=$env:PROJECT_TYPE" `
+            "-D${env:PROJECT_NAME}_BUILD_TEST_PROJECT=OFF" `
+            "-DTHIRD_PARTY_INCLUDE_DIR=$env:THIRD_PARTY_INCLUDE_DIR"
+
+      - name: Build and install release
+        shell: pwsh
+        run: |
+          cmake --build build-release --config $env:BUILD_TYPE
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --install build-release --config $env:BUILD_TYPE --prefix package
+
+      - name: Create Windows packages
+        shell: pwsh
+        run: |
+          $assetDirectory = Join-Path $PWD "release-assets"
+          New-Item -ItemType Directory -Path $assetDirectory | Out-Null
+
+          if ($env:PROJECT_TYPE -eq "executable") {
+            $archive = Join-Path $assetDirectory "$env:PROJECT_NAME-$env:RELEASE_VERSION-windows-x64.zip"
+            Compress-Archive -Path "package\*" -DestinationPath $archive
+
+            $installer = Join-Path $assetDirectory "$env:PROJECT_NAME-$env:RELEASE_VERSION-windows-x64-installer.exe"
+            & makensis.exe `
+              "/DPROJECT_NAME=$env:PROJECT_NAME" `
+              "/DPROJECT_VERSION=$env:RELEASE_VERSION" `
+              "/DPUBLISHER=$env:PROJECT_PUBLISHER" `
+              "/DDEPLOY_DIR=$PWD\package" `
+              "/DOUTPUT_FILE=$installer" `
+              "Scripts\Win\installer.nsi"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          else {
+            $archive = Join-Path $assetDirectory "$env:PROJECT_NAME-$env:RELEASE_VERSION-windows-x64-sdk.zip"
+            Compress-Archive -Path "package\*" -DestinationPath $archive
+          }
+
+      - name: Upload Windows release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $assets = Get-ChildItem -LiteralPath release-assets -File | Select-Object -ExpandProperty FullName
+          gh release upload $env:GITHUB_REF_NAME $assets --repo $env:GITHUB_REPOSITORY --clobber
+
+  build_linux:
+    name: Build Linux Package
+    needs:
+      - prepare_release
+      - test
+    runs-on: ubuntu-latest
+    env:
+      BUILD_TYPE: Release
+      RELEASE_VERSION: ${{ needs.prepare_release.outputs.version }}
+      CMAKE_PROJECT_VERSION: ${{ needs.prepare_release.outputs.cmake_version }}
+      THIRD_PARTY_INCLUDE_DIR: ${{ runner.temp }}/ThirdParty
+
+    steps:
+      - name: Checkout tagged revision
+        uses: actions/checkout@v4
+
+      - name: Load project configuration
+        shell: bash
+        run: cat .github/release-config.env >> "${GITHUB_ENV}"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "4.1.1"
+
+      - name: Configure release
+        shell: bash
+        run: |
+          cmake \
+            -S . \
+            -B build-release \
+            -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+            -DMAIN_PROJECT_NAME="${PROJECT_NAME}" \
+            -DMAIN_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}" \
+            -D"${PROJECT_NAME}_BUILD_TARGET_TYPE=${PROJECT_TYPE}" \
+            -D"${PROJECT_NAME}_BUILD_TEST_PROJECT=OFF" \
+            -DTHIRD_PARTY_INCLUDE_DIR="${THIRD_PARTY_INCLUDE_DIR}"
+
+      - name: Build and install release
+        shell: bash
+        run: |
+          cmake --build build-release --config "${BUILD_TYPE}"
+          cmake --install build-release --config "${BUILD_TYPE}" --prefix package
+
+      - name: Create Linux package
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          if [[ "${PROJECT_TYPE}" == "executable" ]]; then
+            asset="${PROJECT_NAME}-${RELEASE_VERSION}-linux-x86_64.tar.gz"
+          else
+            asset="${PROJECT_NAME}-${RELEASE_VERSION}-linux-x86_64-sdk.tar.gz"
+          fi
+          tar -czf "release-assets/${asset}" -C package .
+
+      - name: Upload Linux release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-assets/* --repo "${GITHUB_REPOSITORY}" --clobber
+
+  build_macos:
+    name: Build macOS Package
+    needs:
+      - prepare_release
+      - test
+    runs-on: macos-latest
+    env:
+      BUILD_TYPE: Release
+      RELEASE_VERSION: ${{ needs.prepare_release.outputs.version }}
+      CMAKE_PROJECT_VERSION: ${{ needs.prepare_release.outputs.cmake_version }}
+      THIRD_PARTY_INCLUDE_DIR: ${{ runner.temp }}/ThirdParty
+
+    steps:
+      - name: Checkout tagged revision
+        uses: actions/checkout@v4
+
+      - name: Load project configuration
+        shell: bash
+        run: cat .github/release-config.env >> "${GITHUB_ENV}"
+
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: "4.1.1"
+
+      - name: Configure release
+        shell: bash
+        run: |
+          cmake \
+            -S . \
+            -B build-release \
+            -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+            -DMAIN_PROJECT_NAME="${PROJECT_NAME}" \
+            -DMAIN_PROJECT_VERSION="${CMAKE_PROJECT_VERSION}" \
+            -D"${PROJECT_NAME}_BUILD_TARGET_TYPE=${PROJECT_TYPE}" \
+            -D"${PROJECT_NAME}_BUILD_TEST_PROJECT=OFF" \
+            -DTHIRD_PARTY_INCLUDE_DIR="${THIRD_PARTY_INCLUDE_DIR}"
+
+      - name: Build and install release
+        shell: bash
+        run: |
+          cmake --build build-release --config "${BUILD_TYPE}"
+          cmake --install build-release --config "${BUILD_TYPE}" --prefix package
+
+      - name: Create macOS package
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          architecture="$(uname -m)"
+          if [[ "${PROJECT_TYPE}" == "executable" ]]; then
+            asset="${PROJECT_NAME}-${RELEASE_VERSION}-macos-${architecture}.tar.gz"
+          else
+            asset="${PROJECT_NAME}-${RELEASE_VERSION}-macos-${architecture}-sdk.tar.gz"
+          fi
+          tar -czf "release-assets/${asset}" -C package .
+
+      - name: Upload macOS release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-assets/* --repo "${GITHUB_REPOSITORY}" --clobber
+
+  publish_release:
+    name: Publish Release
+    needs:
+      - prepare_release
+      - build_windows
+      - build_linux
+      - build_macos
+    runs-on: ubuntu-latest
+    env:
+      IS_PRERELEASE: ${{ needs.prepare_release.outputs.prerelease }}
+
+    steps:
+      - name: Download release assets for checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --dir release-assets
+
+      - name: Create and upload checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          cd release-assets
+          rm -f SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt
+          gh release upload "${GITHUB_REF_NAME}" SHA256SUMS.txt --repo "${GITHUB_REPOSITORY}" --clobber
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if [[ "${IS_PRERELEASE}" == "true" ]]; then
+            gh release edit "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft=false \
+              --prerelease
+          else
+            gh release edit "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft=false \
+              --latest
+          fi
