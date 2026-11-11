@@ -37,11 +37,11 @@ set(DOC_TARGET_NAME tests)
 ### Setup Project File Includes          ###
 ############################################
 
-file(GLOB_RECURSE Headers
+file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS CONFIGURE_DEPENDS
      "Headers/*.h"
 )
 
-file(GLOB_RECURSE Sources
+file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES CONFIGURE_DEPENDS
      "main.cpp"
      "Sources/*.cpp"
 )
@@ -60,8 +60,8 @@ if(USE_CLANG_FORMAT)
             COMMAND ${CLANG_FORMAT}
             -style=file:${CMAKE_SOURCE_DIR}/Configs/.clang-format
             -i
-            ${Headers}
-            ${Sources}
+            ${${PROJECT_NAME}_HEADERS}
+            ${${PROJECT_NAME}_SOURCES}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Formatting code with clang-format"
         )
@@ -83,8 +83,8 @@ if(USE_CLANG_TIDY)
             COMMAND ${CLANG_TIDY}
 			--config-file=${CMAKE_SOURCE_DIR}/Configs/.clang-tidy
             -p=${CMAKE_BINARY_DIR}
-            ${Headers}
-            ${Sources}
+            ${${PROJECT_NAME}_HEADERS}
+            ${${PROJECT_NAME}_SOURCES}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Running clang-tidy for static analysis"
         )
@@ -144,16 +144,16 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_sources(${PROJECT_NAME}
     PRIVATE
-		${Headers}
-		${Sources}
+		${${PROJECT_NAME}_HEADERS}
+		${${PROJECT_NAME}_SOURCES}
 )
 
 ############################################
 ### Setup source groups                  ###
 ############################################
 
-group_files("${Sources}" "Source Files")
-group_files("${Headers}" "Header Files")
+group_files("${${PROJECT_NAME}_SOURCES}" "Source Files")
+group_files("${${PROJECT_NAME}_HEADERS}" "Header Files")
 
 # Specifies include libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC ${MAIN_PROJECT_NAME})

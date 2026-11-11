@@ -40,5 +40,8 @@
 **/install*/*
 **/ThirdPartyDir*/*
 
+# Developer-specific CMake presets and local dependency paths
+CMakeUserPresets.json
+
 # Ignore log files
 *.log
